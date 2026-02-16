@@ -1,6 +1,7 @@
 import { Category } from 'src/categories/entities/category.entity';
 import { SaleItem } from 'src/sales/entities/sale-item.entity';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { UnitType } from '../enum/unit-type-enum';
 
 @Entity()
 export class Product {
@@ -24,6 +25,9 @@ export class Product {
 
   @Column({ type: 'boolean', default: true })
   active: boolean;
+
+  @Column({ type: 'enum', enum: UnitType, default: UnitType.UNIT })
+  unitType: UnitType
 
   @OneToMany(() => SaleItem, (item) => item.product)
   saleItems: SaleItem[];

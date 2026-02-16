@@ -29,7 +29,7 @@ export function Navbar() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Store className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-foreground">Mi Tienda</span>
+          <span className="text-lg font-bold text-foreground">Mas Real</span>
         </Link>
         <ul className="flex items-center gap-1">
           {navLinks.map(({ href, label, icon: Icon }) => {

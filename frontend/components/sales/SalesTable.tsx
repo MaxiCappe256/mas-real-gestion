@@ -16,7 +16,8 @@ export interface Sale {
   fecha: string;
   producto: string;
   cantidad: number;
-  precioUnitario: number;
+  subtotal: number;
+  unitType: 'UNIT' | 'WEIGHT';
 }
 
 interface SalesTableProps {
@@ -56,56 +57,45 @@ export function SalesTable({ sales, onDelete }: SalesTableProps) {
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="font-semibold text-foreground">
-              Fecha
-            </TableHead>
-            <TableHead className="font-semibold text-foreground">
-              Producto
-            </TableHead>
-            <TableHead className="text-right font-semibold text-foreground">
-              Cantidad
-            </TableHead>
-            <TableHead className="text-right font-semibold text-foreground">
-              Total
-            </TableHead>
-            <TableHead className="text-center font-semibold text-foreground">
+            <TableHead>Fecha</TableHead>
+            <TableHead>Producto</TableHead>
+            <TableHead className="text-right">Cantidad</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-center">
               <span className="sr-only">Acciones</span>
             </TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody>
-          {sales.map((sale) => {
-            const total = sale.cantidad * sale.precioUnitario;
-            return (
-              <TableRow key={sale.id} className="border-border">
-                <TableCell className="text-muted-foreground">
-                  {formatDate(sale.fecha)}
-                </TableCell>
-                <TableCell className="font-medium text-foreground">
-                  {sale.producto}
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground">
-                  {sale.cantidad}
-                </TableCell>
-                <TableCell className="text-right font-medium text-foreground">
-                  {formatCurrency(total)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => onDelete(sale.id)}
-                      aria-label={`Eliminar venta de ${sale.producto}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {sales.map((sale) => (
+            <TableRow key={sale.id}>
+              <TableCell className="text-muted-foreground">
+                {formatDate(sale.fecha)}
+              </TableCell>
+
+              <TableCell className="font-medium">{sale.producto}</TableCell>
+
+              <TableCell className="text-right text-muted-foreground">
+                {sale.cantidad} {sale.unitType === 'WEIGHT' ? 'g' : 'un'}
+              </TableCell>
+
+              <TableCell className="text-right font-medium">
+                {formatCurrency(sale.subtotal)}
+              </TableCell>
+
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:text-destructive"
+                  onClick={() => onDelete(sale.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>

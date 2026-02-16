@@ -35,10 +35,7 @@ export default function VentasPage() {
     .filter((s) => s.fecha.split('-')[1] === selectedMonth)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
-  const monthTotal = filteredSales.reduce(
-    (sum, s) => sum + s.cantidad * s.precioUnitario,
-    0,
-  );
+  const monthTotal = filteredSales.reduce((sum, s) => sum + s.subtotal, 0);
 
   /* -------------------- Handlers -------------------- */
   function handleDelete(id: number) {
@@ -52,22 +49,33 @@ export default function VentasPage() {
       priceType: 'RETAIL' | 'WHOLESALE';
     }[];
   }) {
-    // Por ahora simulamos ventas simples (1 fila por item)
     const today = new Date().toISOString().split('T')[0];
 
     const newSales: Sale[] = data.items.map((item) => {
       const product = products.find((p) => p.id === item.productId)!;
+
       const unitPrice =
         item.priceType === 'RETAIL'
           ? product.retailPrice
           : product.wholesalePrice;
 
+      let subtotal = 0;
+
+      if (product.unitType === 'UNIT') {
+        subtotal = unitPrice * item.quantity;
+      }
+
+      if (product.unitType === 'WEIGHT') {
+        subtotal = unitPrice * (item.quantity / 1000);
+      }
+
       return {
-        id: nextId + Math.random(), // solo mock, backend lo va a manejar
+        id: nextId + Math.random(),
         fecha: today,
         producto: product.name,
         cantidad: item.quantity,
-        precioUnitario: unitPrice,
+        subtotal,
+        unitType: product.unitType as 'UNIT' | 'WEIGHT',
       };
     });
 

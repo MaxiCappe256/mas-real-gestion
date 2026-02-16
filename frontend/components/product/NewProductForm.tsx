@@ -17,6 +17,7 @@ type FormValues = {
   categoryId: number;
   costPrice: number;
   stock: number;
+  unitType: 'UNIT' | 'WEIGHT';
 };
 
 interface NewProductFormProps {
@@ -40,7 +41,10 @@ export function NewProductForm({
     formState: { errors },
     reset,
   } = useForm<FormValues>({
-    defaultValues: initialData,
+    defaultValues: {
+      unitType: 'UNIT',
+      ...initialData,
+    },
   });
 
   useEffect(() => {
@@ -94,6 +98,26 @@ export function NewProductForm({
             {errors.categoryId && (
               <p className="text-sm text-destructive">
                 {errors.categoryId.message}
+              </p>
+            )}
+          </div>
+
+          {/* Tipo de unidad */}
+          <div className="flex flex-col gap-1">
+            <Label>Tipo de unidad</Label>
+            <select
+              {...register('unitType', {
+                required: 'El tipo de unidad es obligatorio',
+              })}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="UNIT">Por unidad</option>
+              <option value="WEIGHT">Por peso (kg)</option>
+            </select>
+
+            {errors.unitType && (
+              <p className="text-sm text-destructive">
+                {errors.unitType.message}
               </p>
             )}
           </div>

@@ -34,7 +34,8 @@ export class SalesService {
     return this.dataSource.transaction(async (manager) => {
       // crear la venta vacia
       const sale = await manager.create(Sale, {
-        total: 0
+        total: 0,
+        status: "COMPLETED"
       });
 
       // guardar la venta vacia
@@ -64,7 +65,14 @@ export class SalesService {
           unitPrice = product.retailPrice
         }
 
-        const subtotal = unitPrice * item.quantity
+        let subtotal = 0
+
+        if (product.unitType === "UNIT") subtotal = unitPrice * item.quantity;
+
+        if (product.unitType === "WEIGHT") {
+          const kg = item.quantity / 1000
+          subtotal = unitPrice * kg;
+        }
 
         const saleItem = manager.create(SaleItem, {
           sale,
@@ -72,7 +80,8 @@ export class SalesService {
           quantity: item.quantity,
           unitPrice,
           subtotal,
-          priceType: item.priceType
+          priceType: item.priceType,
+          unitType: product.unitType
         });
 
         await manager.save(saleItem)
@@ -81,6 +90,7 @@ export class SalesService {
         product.stock -= item.quantity
         await manager.save(product)
 
+        total += subtotal;
       }
 
       sale.total = total

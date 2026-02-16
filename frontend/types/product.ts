@@ -10,6 +10,7 @@ export interface Product {
   category: Category;
   stock: number;
   active: boolean;
+  unitType: string;
 }
 
 export interface ProductsResponse {

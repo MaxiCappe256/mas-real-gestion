@@ -25,8 +25,8 @@ type FormValues = {
 interface SaleItemTmp {
   productId: number;
   name: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: number; // unidades o gramos
+  unitPrice: number; // precio por unidad o por KG
   priceType: 'RETAIL' | 'WHOLESALE';
   subtotal: number;
 }
@@ -57,6 +57,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
   const priceType = watch('priceType');
 
   const product = products.find((p) => p.id === Number(productId));
+  const isWeight = product?.unitType === 'WEIGHT';
 
   const unitPrice =
     product && priceType === 'RETAIL'
@@ -64,7 +65,11 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
       : (product?.wholesalePrice ?? 0);
 
   function addItem(data: FormValues) {
-    if (!product || !data.quantity) return;
+    if (!product || !data.quantity || data.quantity <= 0) return;
+
+    const subtotal = isWeight
+      ? (data.quantity / 1000) * unitPrice
+      : data.quantity * unitPrice;
 
     setItems((prev) => [
       ...prev,
@@ -74,7 +79,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
         quantity: data.quantity,
         unitPrice,
         priceType: data.priceType,
-        subtotal: unitPrice * data.quantity,
+        subtotal,
       },
     ]);
 
@@ -86,6 +91,8 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
   }
 
   function submitSale() {
+    if (items.length === 0) return;
+
     onSubmit({
       items: items.map((i) => ({
         productId: i.productId,
@@ -114,6 +121,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
           onSubmit={handleSubmit(addItem)}
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end bg-secondary/10 p-4 rounded-xl border border-dashed"
         >
+          {/* Producto */}
           <div>
             <Label className="mb-2">Producto</Label>
             <Select
@@ -135,6 +143,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
             </Select>
           </div>
 
+          {/* Tipo de precio */}
           <div>
             <Label className="mb-2">Tipo de precio</Label>
             <Select
@@ -151,22 +160,36 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                 <SelectItem value="WHOLESALE">Mayorista</SelectItem>
               </SelectContent>
             </Select>
+
+            {product && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {isWeight ? `$${unitPrice} / kg` : `$${unitPrice} por unidad`}
+              </p>
+            )}
           </div>
 
+          {/* Cantidad */}
           <div>
-            <Label className="mb-2">Cantidad</Label>
+            <Label className="mb-2">
+              {isWeight ? 'Cantidad (gramos)' : 'Cantidad (unidades)'}
+            </Label>
             <Input
               type="number"
-              {...register('quantity', { valueAsNumber: true, min: 1 })}
+              placeholder={isWeight ? 'Ej: 100, 250, 500' : 'Ej: 1, 2, 3'}
+              {...register('quantity', {
+                valueAsNumber: true,
+                min: isWeight ? 10 : 1,
+              })}
             />
           </div>
 
+          {/* Agregar */}
           <Button type="submit">
             <Plus className="h-4 w-4 mr-2" /> Agregar
           </Button>
         </form>
 
-        {/* Items */}
+        {/* Items cargados */}
         {items.length > 0 && (
           <>
             <table className="w-full text-sm border">
@@ -174,9 +197,16 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                 {items.map((i, idx) => (
                   <tr key={idx} className="border-t">
                     <td className="p-2">{i.name}</td>
-                    <td className="p-2 text-center">{i.quantity}</td>
-                    <td className="p-2 text-right">${i.unitPrice}</td>
-                    <td className="p-2 text-right font-bold">${i.subtotal}</td>
+                    <td className="p-2 text-center">
+                      {i.quantity}
+                      {isWeight ? ' g' : ''}
+                    </td>
+                    <td className="p-2 text-right">
+                      {isWeight ? `$${i.unitPrice} / kg` : `$${i.unitPrice}`}
+                    </td>
+                    <td className="p-2 text-right font-bold">
+                      ${i.subtotal.toFixed(2)}
+                    </td>
                     <td className="p-2 text-center">
                       <Button
                         size="icon"
@@ -193,7 +223,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
 
             <div className="flex justify-between font-bold">
               <span>Total</span>
-              <span>${total}</span>
+              <span>${total.toFixed(2)}</span>
             </div>
 
             <Button onClick={submitSale} className="w-full">

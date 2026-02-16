@@ -21,7 +21,7 @@ export class ProductsService {
     const WHOLESALE_MULTIPLER = 1.3;
     const RETAIL_MULTIPLER = 1.5;
 
-    const { costPrice, name, stock, categoryId } = createProductDto
+    const { costPrice, name, stock, categoryId, unitType } = createProductDto
 
     const category = await this.categoryRepository.findOne({ where: { id: categoryId } })
 
@@ -37,6 +37,7 @@ export class ProductsService {
       wholesalePrice,
       retailPrice,
       category,
+      unitType,
       active: true
     })
     return await this.productRepository.save(product)
@@ -86,6 +87,7 @@ export class ProductsService {
 
     if (updateProductDto.name) product.name = updateProductDto.name
     if (updateProductDto.stock !== undefined) product.stock = updateProductDto.stock
+    if (updateProductDto.unitType) product.unitType = updateProductDto.unitType
 
     return await this.productRepository.save(product)
   }

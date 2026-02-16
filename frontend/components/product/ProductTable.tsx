@@ -64,7 +64,7 @@ export function ProductTable({
               Categoría
             </TableHead>
             <TableHead className="text-right font-semibold text-foreground">
-              Costo
+              Costo (Uni / Kg)
             </TableHead>
             <TableHead className="text-right font-semibold text-foreground">
               Minorista
