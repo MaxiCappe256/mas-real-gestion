@@ -1,5 +1,6 @@
+import { Category } from 'src/categories/entities/category.entity';
 import { SaleItem } from 'src/sales/entities/sale-item.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity()
 export class Product {
@@ -9,11 +10,14 @@ export class Product {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  category: string;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  costPrice: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  retailPrice: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  wholesalePrice: number;
 
   @Column({ type: 'int' })
   stock: number;
@@ -23,4 +27,14 @@ export class Product {
 
   @OneToMany(() => SaleItem, (item) => item.product)
   saleItems: SaleItem[];
+
+  @ManyToOne(() => Category, category => category.products, { eager: true })
+  @JoinColumn({ name: 'category_id' })
+  category: Category
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

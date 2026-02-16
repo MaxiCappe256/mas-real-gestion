@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,154 +13,194 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, Send } from 'lucide-react';
+import { Product } from '@/types/product';
 
-interface ProductOption {
-  nombre: string;
-  precioVenta: number;
+type FormValues = {
+  productId: string;
+  quantity: number;
+  priceType: 'RETAIL' | 'WHOLESALE';
+};
+
+interface SaleItemTmp {
+  productId: number;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  priceType: 'RETAIL' | 'WHOLESALE';
+  subtotal: number;
 }
 
 interface NewSaleFormProps {
-  products: ProductOption[];
+  products: Product[];
   onSubmit: (data: {
-    producto: string;
-    cantidad: number;
-    precioUnitario: number;
-    fecha: string;
+    items: {
+      productId: number;
+      quantity: number;
+      priceType: 'RETAIL' | 'WHOLESALE';
+    }[];
   }) => void;
 }
 
 export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
-  const today = new Date().toISOString().split('T')[0];
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [cantidad, setCantidad] = useState('');
-  const [fecha, setFecha] = useState(today);
-
-  const selectedProductData = products.find(
-    (p) => p.nombre === selectedProduct,
-  );
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedProduct || !cantidad || !fecha || !selectedProductData) return;
-
-    onSubmit({
-      producto: selectedProduct,
-      cantidad: Number(cantidad),
-      precioUnitario: selectedProductData.precioVenta,
-      fecha,
+  const { register, handleSubmit, reset, watch, setValue } =
+    useForm<FormValues>({
+      defaultValues: {
+        priceType: 'RETAIL',
+      },
     });
 
-    setSelectedProduct('');
-    setCantidad('');
-    setFecha(today);
+  const [items, setItems] = useState<SaleItemTmp[]>([]);
+
+  const productId = watch('productId');
+  const quantity = watch('quantity');
+  const priceType = watch('priceType');
+
+  const product = products.find((p) => p.id === Number(productId));
+
+  const unitPrice =
+    product && priceType === 'RETAIL'
+      ? product.retailPrice
+      : (product?.wholesalePrice ?? 0);
+
+  function addItem(data: FormValues) {
+    if (!product || !data.quantity) return;
+
+    setItems((prev) => [
+      ...prev,
+      {
+        productId: product.id,
+        name: product.name,
+        quantity: data.quantity,
+        unitPrice,
+        priceType: data.priceType,
+        subtotal: unitPrice * data.quantity,
+      },
+    ]);
+
+    reset({ productId: '', quantity: 0, priceType });
   }
 
-  const isValid =
-    selectedProduct.length > 0 && Number(cantidad) > 0 && fecha.length > 0;
+  function removeItem(index: number) {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function submitSale() {
+    onSubmit({
+      items: items.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        priceType: i.priceType,
+      })),
+    });
+
+    setItems([]);
+  }
+
+  const total = items.reduce((sum, i) => sum + i.subtotal, 0);
 
   return (
     <Card className="border-none shadow-md">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Registrar nueva venta
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5 text-primary" />
+          Nueva Venta
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="product-select"
-                className="text-sm font-medium text-foreground"
-              >
-                Producto
-              </Label>
-              <Select
-                value={selectedProduct}
-                onValueChange={setSelectedProduct}
-              >
-                <SelectTrigger
-                  id="product-select"
-                  className="border-border bg-background shadow-sm"
-                >
-                  <SelectValue placeholder="Seleccionar producto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.nombre} value={product.nombre}>
-                      {product.nombre}
+
+      <CardContent className="flex flex-col gap-6">
+        {/* Item actual */}
+        <form
+          onSubmit={handleSubmit(addItem)}
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end bg-secondary/10 p-4 rounded-xl border border-dashed"
+        >
+          <div>
+            <Label className="mb-2">Producto</Label>
+            <Select
+              value={productId}
+              onValueChange={(v) => setValue('productId', v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {products
+                  .filter((p) => p.active)
+                  .map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="cantidad-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Cantidad
-              </Label>
-              <Input
-                id="cantidad-input"
-                type="number"
-                min={1}
-                placeholder="1"
-                value={cantidad}
-                onChange={(e) => setCantidad(e.target.value)}
-                className="border-border bg-background shadow-sm"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="fecha-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Fecha
-              </Label>
-              <Input
-                id="fecha-input"
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                className="border-border bg-background shadow-sm"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                className="text-sm font-medium text-transparent select-none"
-                aria-hidden
-              >
-                Accion
-              </Label>
-              <Button
-                type="submit"
-                disabled={!isValid}
-                className="gap-2 shadow-sm"
-              >
-                <Plus className="h-4 w-4" />
-                Agregar Venta
-              </Button>
-            </div>
+              </SelectContent>
+            </Select>
           </div>
 
-          {selectedProductData && cantidad && Number(cantidad) > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Total estimado:{' '}
-              <span className="font-semibold text-foreground">
-                {new Intl.NumberFormat('es-AR', {
-                  style: 'currency',
-                  currency: 'ARS',
-                  minimumFractionDigits: 0,
-                }).format(selectedProductData.precioVenta * Number(cantidad))}
-              </span>
-            </p>
-          )}
+          <div>
+            <Label className="mb-2">Tipo de precio</Label>
+            <Select
+              value={priceType}
+              onValueChange={(v) =>
+                setValue('priceType', v as 'RETAIL' | 'WHOLESALE')
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RETAIL">Minorista</SelectItem>
+                <SelectItem value="WHOLESALE">Mayorista</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="mb-2">Cantidad</Label>
+            <Input
+              type="number"
+              {...register('quantity', { valueAsNumber: true, min: 1 })}
+            />
+          </div>
+
+          <Button type="submit">
+            <Plus className="h-4 w-4 mr-2" /> Agregar
+          </Button>
         </form>
+
+        {/* Items */}
+        {items.length > 0 && (
+          <>
+            <table className="w-full text-sm border">
+              <tbody>
+                {items.map((i, idx) => (
+                  <tr key={idx} className="border-t">
+                    <td className="p-2">{i.name}</td>
+                    <td className="p-2 text-center">{i.quantity}</td>
+                    <td className="p-2 text-right">${i.unitPrice}</td>
+                    <td className="p-2 text-right font-bold">${i.subtotal}</td>
+                    <td className="p-2 text-center">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeItem(idx)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-between font-bold">
+              <span>Total</span>
+              <span>${total}</span>
+            </div>
+
+            <Button onClick={submitSale} className="w-full">
+              <Send className="h-4 w-4 mr-2" /> Confirmar venta
+            </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   );

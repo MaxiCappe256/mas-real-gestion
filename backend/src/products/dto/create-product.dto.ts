@@ -11,16 +11,14 @@ export class CreateProductDto {
   @IsString()
   name: string;
 
-  @IsNotEmpty({ message: 'La categoria es obligatoria' })
-  @IsString()
-  category: string;
-
+  @IsNotEmpty({ message: 'El precio de costo es obligatorio' })
   @IsNumber()
-  price: number;
+  costPrice: number;
 
+  @IsNotEmpty({ message: 'El stock es obligatorio' })
   @IsInt()
   stock: number;
 
-  @IsBoolean()
-  active: boolean;
+  @IsInt({ message: 'La categoría es obligatoria' })
+  categoryId: number;
 }

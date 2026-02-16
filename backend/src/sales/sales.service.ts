@@ -9,6 +9,7 @@ import { SaleItem } from './entities/sale-item.entity';
 import { DataSource } from 'typeorm';
 import { startOfMonth, parse, endOfMonth, parseISO, startOfDay, isValid, endOfDay } from 'date-fns';
 import { Between } from 'typeorm';
+import { PriceType } from './enum/price-type-enum';
 
 
 @Injectable()
@@ -55,10 +56,15 @@ export class SalesService {
         // validar stock
         if (product.stock < item.quantity) throw new BadRequestException("Stock insuficiente del producto")
 
-        const unitPrice = product.price
-        const subtotal = unitPrice * item.quantity
+        let unitPrice: number;
 
-        total += subtotal
+        if (item.priceType === PriceType.WHOLESALE) {
+          unitPrice = product.wholesalePrice
+        } else {
+          unitPrice = product.retailPrice
+        }
+
+        const subtotal = unitPrice * item.quantity
 
         const saleItem = manager.create(SaleItem, {
           sale,
@@ -66,6 +72,7 @@ export class SalesService {
           quantity: item.quantity,
           unitPrice,
           subtotal,
+          priceType: item.priceType
         });
 
         await manager.save(saleItem)

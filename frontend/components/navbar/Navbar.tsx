@@ -16,6 +16,7 @@ const navLinks = [
   { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
   { href: '/gastos', label: 'Gastos', icon: Receipt },
   { href: '/productos', label: 'Productos', icon: Package },
+  { href: '/categorias', label: 'Categorias', icon: Package },
 ];
 
 export function Navbar() {

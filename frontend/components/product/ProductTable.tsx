@@ -11,17 +11,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2 } from 'lucide-react';
-
-export interface Product {
-  id: number;
-  nombre: string;
-  categoria: 'Pastelería' | 'Yerbas' | 'Panificados';
-  precioCosto: number;
-  precioVenta: number;
-}
+import { Product } from '@/types/product';
+import { Category } from '@/hooks/categories/useCategories';
 
 interface ProductTableProps {
   products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
 }
 
 function formatCurrency(value: number) {
@@ -38,15 +34,19 @@ const categoryColors: Record<string, string> = {
   Panificados: 'bg-chart-5/15 text-foreground border-chart-5/30',
 };
 
-export function ProductTable({ products }: ProductTableProps) {
-  if (products.length === 0) {
+export function ProductTable({
+  products = [],
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
+  if (!products || products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-16">
         <p className="text-lg font-medium text-muted-foreground">
           No se encontraron productos
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Intenta con otra categoria o agrega un nuevo producto.
+          Agregá un producto para comenzar.
         </p>
       </div>
     );
@@ -61,16 +61,19 @@ export function ProductTable({ products }: ProductTableProps) {
               Nombre
             </TableHead>
             <TableHead className="font-semibold text-foreground">
-              Categoria
+              Categoría
             </TableHead>
             <TableHead className="text-right font-semibold text-foreground">
-              Precio Costo
+              Costo
             </TableHead>
             <TableHead className="text-right font-semibold text-foreground">
-              Precio Venta
+              Minorista
             </TableHead>
             <TableHead className="text-right font-semibold text-foreground">
-              Margen
+              Mayorista
+            </TableHead>
+            <TableHead className="text-center font-semibold text-foreground">
+              Stock
             </TableHead>
             <TableHead className="text-center font-semibold text-foreground">
               Acciones
@@ -78,56 +81,51 @@ export function ProductTable({ products }: ProductTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((product) => {
-            const margen = product.precioVenta - product.precioCosto;
-            const margenPct =
-              product.precioCosto > 0
-                ? ((margen / product.precioCosto) * 100).toFixed(0)
-                : '0';
-
+          {(products || []).map((product) => {
             return (
               <TableRow key={product.id} className="border-border">
                 <TableCell className="font-medium text-foreground">
-                  {product.nombre}
+                  {product.name}
                 </TableCell>
                 <TableCell>
                   <Badge
                     variant="outline"
-                    className={categoryColors[product.categoria] ?? ''}
+                    className={categoryColors[product.category.name] ?? ''}
                   >
-                    {product.categoria}
+                    {product.category.name}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {formatCurrency(product.precioCosto)}
+                  {formatCurrency(product.costPrice)}
                 </TableCell>
                 <TableCell className="text-right font-medium text-foreground">
-                  {formatCurrency(product.precioVenta)}
+                  {formatCurrency(product.retailPrice)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-medium text-blue-600">
+                  {formatCurrency(product.wholesalePrice)}
+                </TableCell>
+                <TableCell className="text-center">
                   <span className="text-sm font-medium text-accent">
-                    +{margenPct}%
+                    {product.stock}
                   </span>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      aria-label={`Editar ${product.nombre}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      aria-label={`Eliminar ${product.nombre}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <TableCell className="flex justify-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:text-primary"
+                    onClick={() => onEdit(product)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:text-destructive"
+                    onClick={() => onDelete(product)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             );

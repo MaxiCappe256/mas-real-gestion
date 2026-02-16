@@ -7,6 +7,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { ResumenController } from './resumen/resumen.controller';
 import { ResumenService } from './resumen/resumen.service';
 import { ResumenModule } from './resumen/resumen.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -19,8 +20,11 @@ import { ResumenModule } from './resumen/resumen.module';
         url: configService.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
         synchronize: true,
-        ssl: {
-          rejectUnauthorized: false,
+        ssl: true,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
         },
       }),
     }),
@@ -28,6 +32,7 @@ import { ResumenModule } from './resumen/resumen.module';
     SalesModule,
     ExpensesModule,
     ResumenModule,
+    CategoriesModule,
   ],
 })
 export class AppModule { }
