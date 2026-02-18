@@ -1,86 +1,45 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Navbar } from '@/components/navbar/Navbar';
-import { MonthSelector } from '@/components/dashboard/MonthSelector';
-import { SalesTable, type Sale } from '@/components/sales/SalesTable';
-import { NewSaleForm } from '@/components/sales/NewSaleForm';
-import { ShoppingCart } from 'lucide-react';
+import { useState } from "react";
+import { Navbar } from "@/components/navbar/Navbar";
+import { MonthSelector } from "@/components/dashboard/MonthSelector";
+import { SalesTable } from "@/components/sales/SalesTable";
+import { NewSaleForm } from "@/components/sales/NewSaleForm";
+import { ShoppingCart } from "lucide-react";
 
-import { useProducts } from '@/hooks/products/useProducts';
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0,
-  }).format(value);
-}
-
-const initialSales: Sale[] = [];
+import { useProducts } from "@/hooks/products/useProducts";
+import { useCancelSale, useCreateSale, useSales } from "@/hooks/sales/useSales";
+import { CreateSalePayload } from "@/types/sale.type";
 
 export default function VentasPage() {
+  /* -------------------- UI State -------------------- */
+  const currentMonth = `${new Date().getFullYear()}-${String(
+    new Date().getMonth() + 1,
+  ).padStart(2, "0")}`;
+
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
   /* -------------------- Data -------------------- */
   const { data: productsResponse } = useProducts();
+  const { data: sales = [], isLoading } = useSales(selectedMonth);
+  const { mutate: createSale, isPending: confirmLoading } = useCreateSale();
+  const { mutate: cancelSale } = useCancelSale();
   const products = productsResponse?.data ?? [];
-
-  /* -------------------- State -------------------- */
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [sales, setSales] = useState<Sale[]>(initialSales);
-  const [nextId, setNextId] = useState(1);
-
-  /* -------------------- Derived -------------------- */
-  const filteredSales = sales
-    .filter((s) => s.fecha.split('-')[1] === selectedMonth)
-    .sort((a, b) => b.fecha.localeCompare(a.fecha));
-
-  const monthTotal = filteredSales.reduce((sum, s) => sum + s.subtotal, 0);
+  const [saleCreated, setSaleCreated] = useState(false);
 
   /* -------------------- Handlers -------------------- */
-  function handleDelete(id: number) {
-    setSales((prev) => prev.filter((s) => s.id !== id));
+  function handleCreateSale(data: CreateSalePayload) {
+    createSale(data, {
+      onSuccess: handleSaleSuccess,
+    });
   }
 
-  function handleAddSale(data: {
-    items: {
-      productId: number;
-      quantity: number;
-      priceType: 'RETAIL' | 'WHOLESALE';
-    }[];
-  }) {
-    const today = new Date().toISOString().split('T')[0];
+  function handleSaleSuccess() {
+    setSaleCreated(true);
+  }
 
-    const newSales: Sale[] = data.items.map((item) => {
-      const product = products.find((p) => p.id === item.productId)!;
-
-      const unitPrice =
-        item.priceType === 'RETAIL'
-          ? product.retailPrice
-          : product.wholesalePrice;
-
-      let subtotal = 0;
-
-      if (product.unitType === 'UNIT') {
-        subtotal = unitPrice * item.quantity;
-      }
-
-      if (product.unitType === 'WEIGHT') {
-        subtotal = unitPrice * (item.quantity / 1000);
-      }
-
-      return {
-        id: nextId + Math.random(),
-        fecha: today,
-        producto: product.name,
-        cantidad: item.quantity,
-        subtotal,
-        unitType: product.unitType as 'UNIT' | 'WEIGHT',
-      };
-    });
-
-    setSales((prev) => [...prev, ...newSales]);
-    setNextId((prev) => prev + newSales.length);
+  function handleSaleConsumed() {
+    setSaleCreated(false);
   }
 
   /* -------------------- UI -------------------- */
@@ -98,10 +57,7 @@ export default function VentasPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Ventas</h1>
-                <p className="text-sm text-muted-foreground">
-                  {filteredSales.length} ventas · Total{' '}
-                  {formatCurrency(monthTotal)}
-                </p>
+                <p className="text-sm text-muted-foreground"></p>
               </div>
             </div>
 
@@ -112,10 +68,22 @@ export default function VentasPage() {
           </div>
 
           {/* Tabla */}
-          <SalesTable sales={filteredSales} onDelete={handleDelete} />
+          {isLoading ? (
+            <p className="text-blue-500 text-center text-xl mt-2 font-bold">
+              Cargando ventas...
+            </p>
+          ) : (
+            <SalesTable sales={sales} onDelete={cancelSale} />
+          )}
 
           {/* Form */}
-          <NewSaleForm products={products} onSubmit={handleAddSale} />
+          <NewSaleForm
+            isPending={confirmLoading}
+            products={products}
+            onSubmit={handleCreateSale}
+            saleCreated={saleCreated}
+            onSaleConsumed={handleSaleConsumed}
+          />
         </div>
       </main>
     </div>

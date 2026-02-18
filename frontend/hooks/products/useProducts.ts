@@ -1,5 +1,5 @@
 import { createProduct, deleteProduct, getProducts, updateProduct } from "@/api/products/products.api"
-import { CreateProductPayload, Product, ProductsResponse, UpdateProductPayload } from "@/types/product"
+import { CreateProductPayload, Product, ProductsResponse, UpdateProductPayload } from "@/types/product.type"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios"
 import { ApiError } from "next/dist/server/api-utils"

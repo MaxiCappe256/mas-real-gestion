@@ -28,15 +28,3 @@ export class Sale {
   })
   items: SaleItem[];
 }
-
-// sale: {
-//   id: 1,
-//   total: 250,
-//   createdAt: 2025-02-13,
-//   items: {
-//     id: 1,
-//     saleId: 1,
-//     productId: 1,
-//     cantidad: 2
-//   }
-// }

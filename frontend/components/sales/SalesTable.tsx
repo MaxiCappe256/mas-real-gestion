@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Table,
@@ -7,35 +7,33 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-
-export interface Sale {
-  id: number;
-  fecha: string;
-  producto: string;
-  cantidad: number;
-  subtotal: number;
-  unitType: 'UNIT' | 'WEIGHT';
-}
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { Sale } from "@/types/sale.type";
 
 interface SalesTableProps {
   sales: Sale[];
   onDelete: (id: number) => void;
+  // onDelete: (id: number) => void;
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
     minimumFractionDigits: 0,
   }).format(value);
 }
 
-function formatDate(dateStr: string) {
-  const [year, month, day] = dateStr.split('-');
-  return `${day}/${month}/${year}`;
+function formatDate(date: string | Date) {
+  const d = typeof date === "string" ? new Date(date) : date;
+
+  return d.toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 export function SalesTable({ sales, onDelete }: SalesTableProps) {
@@ -70,18 +68,31 @@ export function SalesTable({ sales, onDelete }: SalesTableProps) {
         <TableBody>
           {sales.map((sale) => (
             <TableRow key={sale.id}>
+              {/* FECHA */}
               <TableCell className="text-muted-foreground">
-                {formatDate(sale.fecha)}
+                {formatDate(sale.createdAt)}
               </TableCell>
 
-              <TableCell className="font-medium">{sale.producto}</TableCell>
+              {/* PRODUCTOS */}
+              <TableCell className="font-medium">
+                {sale.items.map((item) => (
+                  <div key={item.id}>{item.product.name}</div>
+                ))}
+              </TableCell>
 
+              {/* CANTIDADES */}
               <TableCell className="text-right text-muted-foreground">
-                {sale.cantidad} {sale.unitType === 'WEIGHT' ? 'g' : 'un'}
+                {sale.items.map((item) => (
+                  <div key={item.id}>
+                    {item.quantity}{" "}
+                    {item.product.unitType === "WEIGHT" ? "g" : "un"}
+                  </div>
+                ))}
               </TableCell>
 
+              {/* TOTAL */}
               <TableCell className="text-right font-medium">
-                {formatCurrency(sale.subtotal)}
+                ${sale.total}
               </TableCell>
 
               <TableCell className="text-center">

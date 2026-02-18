@@ -1,11 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 
 @Controller('sales')
 export class SalesController {
-  constructor(private readonly salesService: SalesService) { }
+  constructor(private readonly salesService: SalesService) {}
 
   @Post()
   create(@Body() createSaleDto: CreateSaleDto) {
@@ -22,10 +31,8 @@ export class SalesController {
     return this.salesService.findOne(+id);
   }
 
-  @Post(':id/cancel')
+  @Patch(':id/cancel')
   cancel(@Param('id') id: string) {
-    return this.salesService.cancel(+id)
+    return this.salesService.cancel(+id);
   }
-
-
 }

@@ -26,7 +26,7 @@ export class SaleItem {
   quantity: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  unit_price: number;
+  unitPrice: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   subtotal: number;

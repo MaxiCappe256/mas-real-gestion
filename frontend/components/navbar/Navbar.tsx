@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Store,
   LayoutDashboard,
   ShoppingCart,
   Receipt,
   Package,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/ventas', label: 'Ventas', icon: ShoppingCart },
-  { href: '/gastos', label: 'Gastos', icon: Receipt },
-  { href: '/productos', label: 'Productos', icon: Package },
-  { href: '/categorias', label: 'Categorias', icon: Package },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/ventas", label: "Ventas", icon: ShoppingCart },
+  { href: "/gastos", label: "Gastos", icon: Receipt },
+  { href: "/productos", label: "Productos", icon: Package },
+  { href: "/categorias", label: "Categorias", icon: Package },
 ];
 
 export function Navbar() {
@@ -39,10 +39,10 @@ export function Navbar() {
                 <Link
                   href={href}
                   className={cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />

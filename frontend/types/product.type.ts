@@ -10,12 +10,12 @@ export interface Product {
   category: Category;
   stock: number;
   active: boolean;
-  unitType: string;
+  unitType: "UNIT" | "WEIGHT";
 }
 
 export interface ProductsResponse {
-  data: Product[]
-  total: number
+  data: Product[];
+  total: number;
 }
 
 export interface CreateProductPayload {
@@ -31,5 +31,3 @@ export interface UpdateProductPayload {
   stock?: number;
   categoryId?: number;
 }
-
-

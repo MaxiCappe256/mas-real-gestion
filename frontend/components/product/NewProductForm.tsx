@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Category = {
   id: number;
@@ -17,7 +17,7 @@ type FormValues = {
   categoryId: number;
   costPrice: number;
   stock: number;
-  unitType: 'UNIT' | 'WEIGHT';
+  unitType: "UNIT" | "WEIGHT";
 };
 
 interface NewProductFormProps {
@@ -33,7 +33,7 @@ export function NewProductForm({
   onSubmit,
   categories = [],
   isPending,
-  submitLabel = 'Agregar Producto',
+  submitLabel = "Agregar Producto",
 }: NewProductFormProps) {
   const {
     register,
@@ -42,7 +42,7 @@ export function NewProductForm({
     reset,
   } = useForm<FormValues>({
     defaultValues: {
-      unitType: 'UNIT',
+      unitType: "UNIT",
       ...initialData,
     },
   });
@@ -67,7 +67,7 @@ export function NewProductForm({
           <div className="flex flex-col gap-1">
             <Label>Nombre</Label>
             <Input
-              {...register('name', { required: 'El nombre es obligatorio' })}
+              {...register("name", { required: "El nombre es obligatorio" })}
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -78,8 +78,8 @@ export function NewProductForm({
           <div className="flex flex-col gap-1">
             <Label>Categoría</Label>
             <select
-              {...register('categoryId', {
-                required: 'La categoría es obligatoria',
+              {...register("categoryId", {
+                required: "La categoría es obligatoria",
                 valueAsNumber: true,
               })}
               className="h-10 rounded-md border border-input bg-background px-3 text-sm"
@@ -106,13 +106,13 @@ export function NewProductForm({
           <div className="flex flex-col gap-1">
             <Label>Tipo de unidad</Label>
             <select
-              {...register('unitType', {
-                required: 'El tipo de unidad es obligatorio',
+              {...register("unitType", {
+                required: "El tipo de unidad es obligatorio",
               })}
               className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="UNIT">Por unidad</option>
-              <option value="WEIGHT">Por peso (kg)</option>
+              <option value="WEIGHT">Por peso (g)</option>
             </select>
 
             {errors.unitType && (
@@ -124,13 +124,13 @@ export function NewProductForm({
 
           {/* Costo */}
           <div className="flex flex-col gap-1">
-            <Label>Costo</Label>
+            <Label>Costo (kg)</Label>
             <Input
               type="number"
-              {...register('costPrice', {
-                required: 'El costo es obligatorio',
+              {...register("costPrice", {
+                required: "El costo es obligatorio",
                 valueAsNumber: true,
-                min: { value: 1, message: 'Debe ser mayor a 0' },
+                min: { value: 1, message: "Debe ser mayor a 0" },
               })}
             />
             {errors.costPrice && (
@@ -142,13 +142,13 @@ export function NewProductForm({
 
           {/* Stock */}
           <div className="flex flex-col gap-1">
-            <Label>Stock</Label>
+            <Label>Stock (g)</Label>
             <Input
               type="number"
-              {...register('stock', {
-                required: 'El stock es obligatorio',
+              {...register("stock", {
+                required: "El stock es obligatorio",
                 valueAsNumber: true,
-                min: { value: 0, message: 'No puede ser negativo' },
+                min: { value: 0, message: "No puede ser negativo" },
               })}
             />
             {errors.stock && (
@@ -160,7 +160,7 @@ export function NewProductForm({
           <div className="flex flex-col gap-2">
             <Label className="invisible">Acción</Label>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Guardando...' : submitLabel}
+              {isPending ? "Guardando..." : submitLabel}
             </Button>
           </div>
         </form>

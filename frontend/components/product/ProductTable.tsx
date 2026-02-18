@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2 } from 'lucide-react';
-import { Product } from '@/types/product';
+import { Product } from '@/types/product.type';
 import { Category } from '@/hooks/categories/useCategories';
 
 interface ProductTableProps {

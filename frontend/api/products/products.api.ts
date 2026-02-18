@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios'
-import { CreateProductPayload, Product, ProductsResponse, UpdateProductPayload } from '@/types/product'
+import { CreateProductPayload, Product, ProductsResponse, UpdateProductPayload } from '@/types/product.type'
 
 export const getProducts = async (): Promise<ProductsResponse> => {
   const { data } = await api.get<ProductsResponse>('/products')

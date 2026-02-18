@@ -15,7 +15,7 @@ import {
 } from '@/hooks/products/useProducts';
 
 import { useCategories } from '@/hooks/categories/useCategories';
-import { Product } from '@/types/product';
+import { Product } from '@/types/product.type';
 
 export default function ProductosPage() {
   /* -------------------- Queries -------------------- */

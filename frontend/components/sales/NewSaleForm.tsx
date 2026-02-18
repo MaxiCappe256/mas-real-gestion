@@ -1,25 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, ShoppingCart, Send } from 'lucide-react';
-import { Product } from '@/types/product';
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Trash2, ShoppingCart, Send, Loader2 } from "lucide-react";
+import { Product } from "@/types/product.type";
+import { CreateSalePayload } from "@/types/sale.type";
+import { SaleItem } from "@/types/sale-item.type";
 
 type FormValues = {
   productId: string;
   quantity: number;
-  priceType: 'RETAIL' | 'WHOLESALE';
+  priceType: "RETAIL" | "WHOLESALE";
 };
 
 interface SaleItemTmp {
@@ -27,84 +29,133 @@ interface SaleItemTmp {
   name: string;
   quantity: number; // unidades o gramos
   unitPrice: number; // precio por unidad o por KG
-  priceType: 'RETAIL' | 'WHOLESALE';
+  priceType: "RETAIL" | "WHOLESALE";
   subtotal: number;
 }
 
 interface NewSaleFormProps {
+  isPending: boolean;
   products: Product[];
-  onSubmit: (data: {
-    items: {
-      productId: number;
-      quantity: number;
-      priceType: 'RETAIL' | 'WHOLESALE';
-    }[];
-  }) => void;
+  onSubmit: (data: CreateSalePayload) => void;
+  saleCreated: boolean;
+  onSaleConsumed: () => void;
 }
 
-export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
-  const { register, handleSubmit, reset, watch, setValue } =
-    useForm<FormValues>({
-      defaultValues: {
-        priceType: 'RETAIL',
-      },
-    });
+export function NewSaleForm({
+  products,
+  onSubmit,
+  saleCreated,
+  onSaleConsumed,
+  isPending,
+}: NewSaleFormProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      priceType: "RETAIL",
+    },
+  });
+
+  const productId = watch("productId");
+  const priceType = watch("priceType");
+  const quantity = watch("quantity");
 
   const [items, setItems] = useState<SaleItemTmp[]>([]);
 
-  const productId = watch('productId');
-  const quantity = watch('quantity');
-  const priceType = watch('priceType');
+  const handleAddItem = (data: FormValues) => {
+    const product = products.find((p) => p.id === Number(data.productId));
 
-  const product = products.find((p) => p.id === Number(productId));
-  const isWeight = product?.unitType === 'WEIGHT';
+    if (!product) return;
 
-  const unitPrice =
-    product && priceType === 'RETAIL'
-      ? product.retailPrice
-      : (product?.wholesalePrice ?? 0);
+    let unitPrice: number;
 
-  function addItem(data: FormValues) {
-    if (!product || !data.quantity || data.quantity <= 0) return;
+    if (data.priceType === "RETAIL") {
+      unitPrice = product?.retailPrice;
+    } else {
+      unitPrice = product?.wholesalePrice;
+    }
 
-    const subtotal = isWeight
-      ? (data.quantity / 1000) * unitPrice
-      : data.quantity * unitPrice;
+    let subtotal: number;
 
-    setItems((prev) => [
-      ...prev,
-      {
-        productId: product.id,
-        name: product.name,
-        quantity: data.quantity,
-        unitPrice,
-        priceType: data.priceType,
-        subtotal,
-      },
-    ]);
+    if (product.unitType === "UNIT") {
+      subtotal = unitPrice * data.quantity;
+    } else {
+      subtotal = unitPrice * (data.quantity / 1000);
+    }
 
-    reset({ productId: '', quantity: 0, priceType });
-  }
+    const item: SaleItemTmp = {
+      productId: product.id,
+      name: product.name,
+      quantity: data.quantity,
+      priceType: data.priceType,
+      unitPrice,
+      subtotal,
+    };
 
-  function removeItem(index: number) {
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  }
+    setItems((prev) => [...prev, item]);
 
-  function submitSale() {
+    reset({
+      productId: "",
+      quantity: 0,
+      priceType: data.priceType,
+    });
+  };
+
+  const handleConfirmSale = () => {
     if (items.length === 0) return;
 
-    onSubmit({
-      items: items.map((i) => ({
-        productId: i.productId,
-        quantity: i.quantity,
-        priceType: i.priceType,
-      })),
-    });
+    const itemsDto = items.map((i) => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      priceType: i.priceType,
+    }));
 
+    onSubmit({ items: itemsDto });
+  };
+
+  // i => item | idx => posicion
+  const handleRemoveItem = (index: number) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+  // buscar el producto seleccionado
+  const product = products.find((p) => p.id === Number(productId));
+
+  // fijarse si es unidad o peso
+  const isWeight = product?.unitType === "WEIGHT" ? true : false;
+
+  const saleUnitPrice = product
+    ? priceType === "RETAIL"
+      ? product.retailPrice
+      : product.wholesalePrice
+    : null;
+
+  const salePriceLabel = product ? (isWeight ? "/kg" : "por unidad") : null;
+
+  const costPrice = product?.costPrice;
+
+  const quantityLabel = product?.unitType === "UNIT" ? "uni" : "g";
+
+  const quantityPlaceholder = isWeight ? "Ej: 100, 250, 500" : "Ej: 1, 2, 3";
+
+  const cartTotal = items.reduce((acc, item) => acc + item.subtotal, 0);
+
+  const clearForm = () => {
     setItems([]);
-  }
+    reset();
+    onSaleConsumed();
+  };
 
-  const total = items.reduce((sum, i) => sum + i.subtotal, 0);
+  useEffect(() => {
+    if (saleCreated) {
+      setItems([]);
+      reset();
+    }
+  }, [saleCreated]);
 
   return (
     <Card className="border-none shadow-md">
@@ -118,7 +169,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
       <CardContent className="flex flex-col gap-6">
         {/* Item actual */}
         <form
-          onSubmit={handleSubmit(addItem)}
+          onSubmit={handleSubmit(handleAddItem)}
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end bg-secondary/10 p-4 rounded-xl border border-dashed"
         >
           {/* Producto */}
@@ -126,7 +177,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
             <Label className="mb-2">Producto</Label>
             <Select
               value={productId}
-              onValueChange={(v) => setValue('productId', v)}
+              onValueChange={(v) => setValue("productId", v)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar..." />
@@ -141,6 +192,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                   ))}
               </SelectContent>
             </Select>
+            ${costPrice}
           </div>
 
           {/* Tipo de precio */}
@@ -149,7 +201,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
             <Select
               value={priceType}
               onValueChange={(v) =>
-                setValue('priceType', v as 'RETAIL' | 'WHOLESALE')
+                setValue("priceType", v as "RETAIL" | "WHOLESALE")
               }
             >
               <SelectTrigger>
@@ -160,26 +212,16 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                 <SelectItem value="WHOLESALE">Mayorista</SelectItem>
               </SelectContent>
             </Select>
-
-            {product && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {isWeight ? `$${unitPrice} / kg` : `$${unitPrice} por unidad`}
-              </p>
-            )}
+            Venta: ${saleUnitPrice} {salePriceLabel}
           </div>
 
           {/* Cantidad */}
           <div>
-            <Label className="mb-2">
-              {isWeight ? 'Cantidad (gramos)' : 'Cantidad (unidades)'}
-            </Label>
+            <Label className="mb-2">Cantidad {quantityLabel}</Label>
             <Input
               type="number"
-              placeholder={isWeight ? 'Ej: 100, 250, 500' : 'Ej: 1, 2, 3'}
-              {...register('quantity', {
-                valueAsNumber: true,
-                min: isWeight ? 10 : 1,
-              })}
+              placeholder={quantityPlaceholder}
+              {...register("quantity", { valueAsNumber: true })}
             />
           </div>
 
@@ -199,7 +241,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                     <td className="p-2">{i.name}</td>
                     <td className="p-2 text-center">
                       {i.quantity}
-                      {isWeight ? ' g' : ''}
+                      {isWeight ? " g" : ""}
                     </td>
                     <td className="p-2 text-right">
                       {isWeight ? `$${i.unitPrice} / kg` : `$${i.unitPrice}`}
@@ -211,7 +253,7 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => removeItem(idx)}
+                        onClick={() => handleRemoveItem(idx)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -223,11 +265,24 @@ export function NewSaleForm({ products, onSubmit }: NewSaleFormProps) {
 
             <div className="flex justify-between font-bold">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${cartTotal}</span>
             </div>
 
-            <Button onClick={submitSale} className="w-full">
-              <Send className="h-4 w-4 mr-2" /> Confirmar venta
+            <Button
+              onClick={handleConfirmSale}
+              className="w-full"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Confirmando venta...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" /> Confirmar venta
+                </>
+              )}
             </Button>
           </>
         )}
