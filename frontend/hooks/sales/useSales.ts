@@ -8,10 +8,10 @@ export interface ApiError {
   message: string;
 }
 
-export const useSales = (month?: string) => {
+export const useSales = (saleMonth?: string) => {
   return useQuery<Sale[]>({
-    queryKey: ["sales", month],
-    queryFn: () => getSales(month),
+    queryKey: ["sales", saleMonth],
+    queryFn: () => getSales(saleMonth),
     retry: 1,
   });
 };

@@ -1,9 +1,9 @@
 import { api } from "@/lib/axios";
 import { CreateSalePayload } from "@/types/sale.type";
 
-export const getSales = async (month?: string) => {
+export const getSales = async (saleMonth?: string) => {
   const { data } = await api.get("/sales", {
-    params: month ? { saleMonth: month } : {},
+    params: saleMonth ? { saleMonth: saleMonth } : {},
   });
 
   return data;

@@ -1,57 +1,40 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+
+export interface NewExpenseFormInputs {
+  description: string;
+  amount: number;
+  provider: string;
+  createdAt: string;
+}
 
 interface NewExpenseFormProps {
-  onSubmit: (data: {
-    monto: number;
-    descripcion: string;
-    tipo: 'Proveedor' | 'Fijo';
-    fecha: string;
-  }) => void;
+  onSubmit: (data: NewExpenseFormInputs) => void;
 }
 
 export function NewExpenseForm({ onSubmit }: NewExpenseFormProps) {
-  const today = new Date().toISOString().split('T')[0];
-  const [monto, setMonto] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [tipo, setTipo] = useState<string>('');
-  const [fecha, setFecha] = useState(today);
+  const today = new Date().toISOString().split("T")[0];
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!monto || !descripcion || !tipo || !fecha) return;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<NewExpenseFormInputs>({
+    defaultValues: { createdAt: today },
+  });
 
-    onSubmit({
-      monto: Number(monto),
-      descripcion,
-      tipo: tipo as 'Proveedor' | 'Fijo',
-      fecha,
-    });
-
-    setMonto('');
-    setDescripcion('');
-    setTipo('');
-    setFecha(today);
-  }
-
-  const isValid =
-    Number(monto) > 0 &&
-    descripcion.trim().length > 0 &&
-    tipo.length > 0 &&
-    fecha.length > 0;
+  const submitHandler = (data: NewExpenseFormInputs) => {
+    console.log(data);
+    onSubmit(data);
+    reset({ createdAt: today });
+  };
 
   return (
     <Card className="border-none shadow-md">
@@ -61,92 +44,88 @@ export function NewExpenseForm({ onSubmit }: NewExpenseFormProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+          onSubmit={handleSubmit(submitHandler)}
+          className="flex flex-col gap-5"
+        >
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {/* Descripción */}
             <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="descripcion-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Descripcion
-              </Label>
+              <Label htmlFor="descripcion-input">Descripción</Label>
               <Input
                 id="descripcion-input"
                 type="text"
                 placeholder="Ej: Harina x 10kg"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                className="border-border bg-background shadow-sm"
+                {...register("description", {
+                  required: "La descripción es obligatoria",
+                })}
               />
+              {errors.description && (
+                <span className="text-sm text-red-500">
+                  {errors.description.message}
+                </span>
+              )}
             </div>
 
+            {/* Monto */}
             <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="monto-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Monto ($)
-              </Label>
+              <Label htmlFor="amount-input">Monto ($)</Label>
               <Input
-                id="monto-input"
+                id="amount-input"
                 type="number"
                 min={1}
                 placeholder="0"
-                value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-                className="border-border bg-background shadow-sm"
+                {...register("amount", {
+                  required: "El monto es obligatorio",
+                  min: { value: 1, message: "El monto debe ser mayor a 0" },
+                  valueAsNumber: true,
+                })}
               />
+              {errors.amount && (
+                <span className="text-sm text-red-500">
+                  {errors.amount.message}
+                </span>
+              )}
             </div>
 
+            {/* Proveedor */}
             <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="tipo-select"
-                className="text-sm font-medium text-foreground"
-              >
-                Tipo
-              </Label>
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger
-                  id="tipo-select"
-                  className="border-border bg-background shadow-sm"
-                >
-                  <SelectValue placeholder="Seleccionar tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Proveedor">Proveedor</SelectItem>
-                  <SelectItem value="Fijo">Fijo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="fecha-gasto-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Fecha
-              </Label>
+              <Label htmlFor="provider-input">Proveedor</Label>
               <Input
-                id="fecha-gasto-input"
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                className="border-border bg-background shadow-sm"
+                id="provider-input"
+                placeholder="Ej: Gime Salas Rosario..."
+                {...register("provider", {
+                  required: "El proveedor es obligatorio",
+                })}
               />
+              {errors.provider && (
+                <span className="text-sm text-red-500">
+                  {errors.provider.message}
+                </span>
+              )}
             </div>
 
+            {/* Fecha */}
             <div className="flex flex-col gap-2">
-              <Label
-                className="text-sm font-medium text-transparent select-none"
-                aria-hidden
-              >
-                Accion
-              </Label>
-              <Button
-                type="submit"
-                disabled={!isValid}
-                className="gap-2 shadow-sm"
-              >
+              <Label htmlFor="createdAt-input">Fecha</Label>
+              <Input
+                id="createdAt-input"
+                type="date"
+                {...register("createdAt", {
+                  required: "La fecha es obligatoria",
+                })}
+              />
+              {errors.createdAt && (
+                <span className="text-sm text-red-500">
+                  {errors.createdAt.message}
+                </span>
+              )}
+            </div>
+
+            {/* Botón */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-transparent select-none">Acción</Label>
+              <Button type="submit" className="gap-2 shadow-sm">
                 <Plus className="h-4 w-4" />
                 Agregar Gasto
               </Button>

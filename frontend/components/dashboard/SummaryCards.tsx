@@ -1,22 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 
 interface SummaryCardsProps {
-  ventas: number;
   gastos: number;
+  totalVentas: number;
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
     minimumFractionDigits: 0,
   }).format(value);
 }
 
-export function SummaryCards({ ventas, gastos }: SummaryCardsProps) {
-  const resultado = ventas - gastos;
-  const isPositive = resultado >= 0;
+export function SummaryCards({ gastos, totalVentas }: SummaryCardsProps) {
+  // const resultado = ventas - gastos;
+  // const isPositive = resultado >= 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -31,7 +31,7 @@ export function SummaryCards({ ventas, gastos }: SummaryCardsProps) {
         </CardHeader>
         <CardContent>
           <p className="text-3xl font-bold text-foreground">
-            {formatCurrency(ventas)}
+            {formatCurrency(totalVentas)}
           </p>
         </CardContent>
       </Card>
@@ -58,28 +58,28 @@ export function SummaryCards({ ventas, gastos }: SummaryCardsProps) {
             Resultado del Mes
           </CardTitle>
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${
-              isPositive ? 'bg-accent/10' : 'bg-destructive/10'
-            }`}
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${{
+              totalVentas,
+            }}`}
           >
-            <DollarSign
+            {/* <DollarSign
               className={`h-5 w-5 ${
-                isPositive ? 'text-accent' : 'text-destructive'
+                isPositive ? "text-accent" : "text-destructive"
               }`}
-            />
+            /> */}
           </div>
         </CardHeader>
         <CardContent>
-          <p
+          {/* <p
             className={`text-3xl font-bold ${
-              isPositive ? 'text-accent' : 'text-destructive'
+             //  isPositive ? "text-accent" : "text-destructive"
             }`}
-          >
-            {formatCurrency(resultado)}
-          </p>
+          > */}
+          {/* {formatCurrency(resultado)} */}
+          {/* </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {isPositive ? 'Ganancia' : 'Perdida'}
-          </p>
+            {isPositive ? "Ganancia" : "Perdida"}
+          </p> */}
         </CardContent>
       </Card>
     </div>

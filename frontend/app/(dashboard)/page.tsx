@@ -6,6 +6,7 @@ import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { MonthSelector } from "@/components/dashboard/MonthSelector";
 import { ActionButtons } from "@/components/dashboard/ActionButton";
 import { useResume } from "@/hooks/resumes/useResume";
+import { useSales } from "@/hooks/sales/useSales";
 
 export default function DashboardPage() {
   const now = new Date();
@@ -16,6 +17,9 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const { data: summary, isLoading, isError } = useResume(selectedMonth);
+  const { data: sales = [] } = useSales(selectedMonth);
+
+  const totalVentas = sales.reduce((acc, sale) => acc + sale.total, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,6 +44,7 @@ export default function DashboardPage() {
           <SummaryCards
             ventas={summary?.sales.total ?? 0}
             gastos={summary?.expenses.total ?? 0}
+            totalVentas={totalVentas}
           />
 
           {/* Divider */}
